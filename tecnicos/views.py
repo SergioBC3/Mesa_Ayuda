@@ -2,15 +2,12 @@ from django.shortcuts import render, get_object_or_404
 
 from .models import Tecnico
 
-# PATRÓN DE LA CLASE: la vista consume el modelo, arma un "contexto"
-# (diccionario) y lo envía al template con render().
-
 
 def lista_tecnicos(request):
     """Vista 1: consulta el modelo y envía los datos al template por el contexto."""
-    tecnicos = Tecnico.objects.all()                  # 1) consumir el modelo
-    contexto = {'tecnicos': tecnicos}                 # 2) armar el contexto
-    return render(request, 'tecnicos/lista_tecnicos.html', contexto)  # 3) render()
+    tecnicos = Tecnico.objects.all()                  
+    contexto = {'tecnicos': tecnicos}                 
+    return render(request, 'tecnicos/lista_tecnicos.html', contexto)  
 
 
 def detalle_tecnico(request, tecnico_id):

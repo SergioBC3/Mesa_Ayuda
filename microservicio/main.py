@@ -1,8 +1,4 @@
-"""Microservicio de preguntas frecuentes (FAQs) de la Mesa de Ayuda.
 
-Lee y guarda las FAQs en MongoDB Atlas. La app Django lo consume por HTTP.
-Ejecutar local:  uvicorn main:app --reload --port 8001
-"""
 import os
 
 from fastapi import FastAPI
@@ -37,7 +33,6 @@ def inicio():
 
 @app.get("/faqs")
 def listar_faqs():
-    # Si la colección está vacía, se cargan datos de ejemplo (solo la primera vez).
     if coleccion.count_documents({}) == 0:
         coleccion.insert_many([dict(f) for f in FAQS_INICIALES])
     return [
