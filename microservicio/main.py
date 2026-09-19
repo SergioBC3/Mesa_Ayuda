@@ -7,7 +7,6 @@ from pymongo import MongoClient
 
 app = FastAPI(title="Microservicio de FAQs - Mesa de Ayuda")
 
-# La cadena de conexión NO va en el código: se lee de una variable de entorno.
 cliente = MongoClient(os.environ["MONGODB_URI"])
 coleccion = cliente["mesa_ayuda"]["faqs"]
 

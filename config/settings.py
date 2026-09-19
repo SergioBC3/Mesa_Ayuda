@@ -1,10 +1,4 @@
-"""
-Proyecto: Mesa de Ayuda
-Problema que resuelve: una oficina recibe solicitudes de soporte técnico
-de forma verbal o por WhatsApp y las anota en papel, por lo que se pierden
-solicitudes y no se sabe quién las atiende. Este proyecto las organiza
-en dos apps: tickets (solicitudes) y tecnicos (equipo de soporte).
-"""
+
 
 import os
 from pathlib import Path
@@ -72,8 +66,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# URL del microservicio (desplegado en Render) que consume la vista
-# preguntas_frecuentes. Cámbiala por la URL real de tu servicio.
-MICROSERVICIO_URL = os.environ.get('MICROSERVICIO_URL', 'https://TU-SERVICIO.onrender.com')
+
+MICROSERVICIO_URL = os.environ.get('MICROSERVICIO_URL', 'https://mesa-ayuda-nnue.onrender.com')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
