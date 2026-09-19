@@ -6,11 +6,11 @@ solicitudes verbales directas de los usuarios.
 Esto puede generar inconvenientes como:
 Perdida u olvido de requerimientos pendientes.
 Dificultad para hacer seguimiento al estado real de los soportes.
-Falta de visibilidad para los técnicos sobre qué tareas tienen activas 
+Falta de visibilidad para los técnicos sobre que tareas tienen activas 
 y cuales ya han sido resueltas.
 Ausencia de un historial centralizado de atenciones prestadas.
 
-SOLUCIÓN PROPUESTA:
+SOLUCION PROPUESTA:
 Implementar una plataforma web centralizada en Django que permita a los técnicos:
 Registrar manualmente y de forma rápida cualquier requerimiento recibido por WhatsApp o de manera verbal.
 Clasificar y visibilizar claramente el estado de cada solicitud.
