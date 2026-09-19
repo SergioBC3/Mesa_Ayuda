@@ -4,22 +4,15 @@ from django.shortcuts import render, get_object_or_404
 
 from .models import Ticket
 
-# PATRÓN DE LA CLASE:
-#   1) La vista consulta el modelo (o un servicio externo).
-#   2) Guarda lo que obtuvo en un diccionario llamado "contexto".
-#   3) Se lo envía al template con render(request, template, contexto).
-
 
 def lista_tickets(request):
     """Vista 1: consulta el modelo y envía los datos al template por el contexto."""
-    tickets = Ticket.objects.all()                    # 1) consumir el modelo
-    contexto = {'tickets': tickets}                   # 2) armar el contexto
-    return render(request, 'tickets/lista_tickets.html', contexto)  # 3) render()
+    tickets = Ticket.objects.all()                    
+    contexto = {'tickets': tickets}                   
+    return render(request, 'tickets/lista_tickets.html', contexto)  
 
 
 def detalle_ticket(request, ticket_id):
-    """Vista 2: ruta dinámica <int:ticket_id>. get_object_or_404() devuelve
-    el ticket o, si no existe, una página 404 (en lugar de un error 500)."""
     ticket = get_object_or_404(Ticket, pk=ticket_id)
     contexto = {'ticket': ticket}
     return render(request, 'tickets/detalle_ticket.html', contexto)
@@ -33,14 +26,9 @@ def tickets_por_estado(request, estado):
 
 
 def preguntas_frecuentes(request):
-    """Vista 4: consume un MICROSERVICIO propio (FastAPI en Render) que a su
-    vez lee la información de MongoDB Atlas. Django no toca esa base de datos:
-    solo hace una petición HTTP y pasa la respuesta al template por el contexto."""
     faqs = []
     error = None
     try:
-        # timeout largo: el plan gratis de Render "duerme" el servicio y
-        # la primera petición puede tardar cerca de un minuto en responder.
         respuesta = requests.get(f'{settings.MICROSERVICIO_URL}/faqs', timeout=60)
         respuesta.raise_for_status()
         faqs = respuesta.json()
