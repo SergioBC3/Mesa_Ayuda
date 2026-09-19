@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Preguntas frecuentes{% endblock %}
+{% block contenido %}
+    <h1>Preguntas frecuentes</h1>
+    <p><small>Datos obtenidos del microservicio (MongoDB Atlas).</small></p>
+
+    {% if error %}
+        <p><strong>{{ error }}</strong></p>
+    {% endif %}
+
+    <ul>
+        {% for f in faqs %}
+            <li>
+                <strong>{{ f.pregunta }}</strong><br>
+                {{ f.respuesta }}
+            </li>
+        {% empty %}
+            {% if not error %}<li>No hay preguntas frecuentes registradas.</li>{% endif %}
+        {% endfor %}
+    </ul>
+{% endblock %}

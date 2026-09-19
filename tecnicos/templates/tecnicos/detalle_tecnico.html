@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}{{ tecnico.nombre }}{% endblock %}
+{% block contenido %}
+    <h1>{{ tecnico.nombre }}</h1>
+    <p>Especialidad: {{ tecnico.especialidad }}</p>
+    <h3>Tickets asignados</h3>
+    <ul>
+        {% for t in tickets %}
+            <li><a href="{% url 'tickets:detalle_ticket' t.id %}">{{ t.titulo }}</a></li>
+        {% empty %}
+            <li>No tiene tickets asignados.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'tecnicos:lista_tecnicos' %}">Volver</a></p>
+{% endblock %}

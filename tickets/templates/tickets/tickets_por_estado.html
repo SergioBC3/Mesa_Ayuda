@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}Tickets {{ estado }}{% endblock %}
+{% block contenido %}
+    <h1>Tickets con estado: {{ estado }}</h1>
+    <ul>
+        {% for t in tickets %}
+            <li><a href="{% url 'tickets:detalle_ticket' t.id %}">{{ t.titulo }}</a></li>
+        {% empty %}
+            <li>No hay tickets con este estado.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'tickets:lista_tickets' %}">Volver</a></p>
+{% endblock %}
