@@ -5,6 +5,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / '.env')
+
 SECRET_KEY = 'clave-de-desarrollo-no-usar-en-produccion'
 
 DEBUG = True

@@ -1,19 +1,39 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block titulo %}Tickets{% endblock %}
 {% block contenido %}
-    <h1>Tickets</h1>
-    <ul>
-        {% for t in tickets %}
-            <li>
-                <a href="{% url 'tickets:detalle_ticket' t.id %}">{{ t.titulo }}</a>
-                - {{ t.estado }}
-            </li>
-        {% empty %}
-            <li>No hay tickets registrados. Agrégalos desde /admin/.</li>
-        {% endfor %}
-    </ul>
-    <p>Filtrar por estado:
-        <a href="{% url 'tickets:tickets_por_estado' 'abierto' %}">Abiertos</a> |
-        <a href="{% url 'tickets:tickets_por_estado' 'cerrado' %}">Cerrados</a>
-    </p>
+<h1>Tickets</h1>
+
+<p>
+    <a href="{% url 'tickets:crear_ticket' %}" class="btn">Nuevo ticket</a>
+</p>
+
+<p>
+    Filtrar por estado:
+    <a href="{% url 'tickets:tickets_por_estado' 'abierto' %}">Abiertos</a> |
+    <a href="{% url 'tickets:tickets_por_estado' 'cerrado' %}">Cerrados</a>
+</p>
+
+{% if tickets %}
+<table>
+    <tr>
+        <th>Título</th>
+        <th>Estado</th>
+        <th>Técnico asignado</th>
+        <th>Acciones</th>
+    </tr>
+    {% for ticket in tickets %}
+    <tr>
+        <td><a href="{% url 'tickets:detalle_ticket' ticket.id %}">{{ ticket.titulo }}</a></td>
+        <td>{{ ticket.get_estado_display }}</td>
+        <td>{{ ticket.tecnico.nombre|default:"Sin asignar" }}</td>
+        <td>
+            <a href="{% url 'tickets:editar_ticket' ticket.id %}">Editar</a>
+            <a href="{% url 'tickets:eliminar_ticket' ticket.id %}">Eliminar</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No hay tickets registrados.</p>
+{% endif %}
 {% endblock %}

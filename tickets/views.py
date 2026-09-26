@@ -1,8 +1,8 @@
 import requests
 from django.conf import settings
-from django.shortcuts import render, get_object_or_404
-
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import Ticket
+from .forms import TicketForm
 
 
 def lista_tickets(request):
@@ -21,6 +21,39 @@ def tickets_por_estado(request, estado):
     tickets = Ticket.objects.filter(estado=estado)
     contexto = {'tickets': tickets, 'estado': estado}
     return render(request, 'tickets/tickets_por_estado.html', contexto)
+
+
+def crear_ticket(request):
+    if request.method == 'POST':
+        form = TicketForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('tickets:lista_tickets')
+    else:
+        form = TicketForm()
+    return render(request, 'tickets/formulario_ticket.html',
+                  {'form': form, 'titulo_pagina': 'Nuevo ticket'})
+
+
+def editar_ticket(request, ticket_id):
+    ticket = get_object_or_404(Ticket, pk=ticket_id)
+    if request.method == 'POST':
+        form = TicketForm(request.POST, instance=ticket)
+        if form.is_valid():
+            form.save()
+            return redirect('tickets:detalle_ticket', ticket_id=ticket.id)
+    else:
+        form = TicketForm(instance=ticket)
+    return render(request, 'tickets/formulario_ticket.html',
+                  {'form': form, 'titulo_pagina': 'Editar ticket'})
+
+
+def eliminar_ticket(request, ticket_id):
+    ticket = get_object_or_404(Ticket, pk=ticket_id)
+    if request.method == 'POST':
+        ticket.delete()
+        return redirect('tickets:lista_tickets')
+    return render(request, 'tickets/confirmar_eliminar.html', {'ticket': ticket})
 
 
 def preguntas_frecuentes(request):
@@ -49,6 +82,27 @@ def asistente_ia(request):
         elif not settings.GROQ_API_KEY:
             error = 'Falta configurar GROQ_API_KEY en el servidor.'
         else:
+            tickets = Ticket.objects.all().select_related('tecnico')
+            lineas = []
+            for t in tickets:
+                tecnico_nombre = t.tecnico.nombre if t.tecnico else 'Sin asignar'
+                lineas.append(
+                    f'- Ticket #{t.id}: "{t.titulo}" | Estado: {t.get_estado_display()} '
+                    f'| Técnico: {tecnico_nombre} | Descripción: {t.descripcion}'
+                )
+            contexto_bd = '\n'.join(lineas) if lineas else 'No hay tickets registrados.'
+
+            mensaje_sistema = (
+                'Eres el asistente virtual de una mesa de ayuda técnico. '
+                'Responde en español, de forma breve y clara. '
+                'Aquí está la base de datos actual de tickets:\n'
+                f'{contexto_bd}\n'
+                'Usa esta información para responder preguntas sobre el estado, '
+                'técnico asignado o descripción de los tickets. '
+                'Si preguntan algo que no está relacionado con los tickets, '
+                'responde de todas formas de forma general.'
+            )
+
             try:
                 respuesta = requests.post(
                     'https://api.groq.com/openai/v1/chat/completions',
@@ -59,18 +113,7 @@ def asistente_ia(request):
                     json={
                         'model': 'openai/gpt-oss-20b',
                         'messages': [
-                            {
-                                'role': 'system',
-                                'content': (
-                                    'Eres el asistente virtual de una mesa de ayuda '
-                                    'de soporte técnico. Responde en español, de '
-                                    'forma breve y clara, preguntas sobre cómo '
-                                    'reportar una falla, el estado de los tickets, '
-                                    'los técnicos disponibles o consejos básicos de '
-                                    'soporte técnico (por ejemplo: internet lento, '
-                                    'impresora sin conexión, correo que no llega).'
-                                ),
-                            },
+                            {'role': 'system', 'content': mensaje_sistema},
                             {'role': 'user', 'content': pregunta},
                         ],
                     },

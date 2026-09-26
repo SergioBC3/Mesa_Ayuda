@@ -1,12 +1,23 @@
-{% extends "base.html" %}
-{% block titulo %}Técnicos{% endblock %}
+{% extends 'base.html' %}
 {% block contenido %}
-    <h1>Técnicos</h1>
-    <ul>
-        {% for t in tecnicos %}
-            <li><a href="{% url 'tecnicos:detalle_tecnico' t.id %}">{{ t.nombre }}</a> - {{ t.especialidad }}</li>
-        {% empty %}
-            <li>No hay técnicos registrados. Agrégalos desde /admin/.</li>
-        {% endfor %}
-    </ul>
+<h1>Técnicos</h1>
+<a href="{% url 'tecnicos:crear_tecnico' %}" class="btn">Nuevo técnico</a>
+
+<table>
+    <tr>
+        <th>Nombre</th>
+        <th>Especialidad</th>
+        <th>Acciones</th>
+    </tr>
+    {% for tecnico in tecnicos %}
+    <tr>
+        <td><a href="{% url 'tecnicos:detalle_tecnico' tecnico.id %}">{{ tecnico.nombre }}</a></td>
+        <td>{{ tecnico.especialidad }}</td>
+        <td>
+            <a href="{% url 'tecnicos:editar_tecnico' tecnico.id %}">Editar</a>
+            <a href="{% url 'tecnicos:eliminar_tecnico' tecnico.id %}">Eliminar</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}
