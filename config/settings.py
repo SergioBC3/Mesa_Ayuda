@@ -69,4 +69,6 @@ STATIC_URL = 'static/'
 
 MICROSERVICIO_URL = os.environ.get('MICROSERVICIO_URL', 'https://mesa-ayuda-nnue.onrender.com')
 
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
