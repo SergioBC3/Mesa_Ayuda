@@ -1,7 +1,7 @@
 # Blueprint de Render: despliega TODO el proyecto desde un solo repositorio.
 # Render > New > Blueprint > elegir el repo. Pide los valores marcados sync:false.
 services:
-  # ---------------- Aplicacion Django ----------------
+ 
   - type: web
     name: mesa-ayuda-web
     runtime: python
@@ -15,18 +15,17 @@ services:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
-      - key: URL_LECTURA_PRINCIPAL      # Python
+      - key: URL_LECTURA_PRINCIPAL      
         sync: false
-      - key: URL_LECTURA_RESPALDO       # Node.js
+      - key: URL_LECTURA_RESPALDO     
         sync: false
-      - key: URL_INSERTAR               # Java
+      - key: URL_INSERTAR            
         sync: false
-      - key: URL_ACTUALIZAR             # Go
+      - key: URL_ACTUALIZAR            
         sync: false
-      - key: URL_ELIMINAR               # Node.js
+      - key: URL_ELIMINAR              
         sync: false
-      - key: MICROSERVICIO_URL          # FAQs (mismo servicio Python)
-        sync: false
+      - key: MICROSERVICIO_URL          
       - key: GROQ_API_KEY
         sync: false
 
@@ -46,7 +45,7 @@ services:
       - key: ADMIN_TOKEN
         generateValue: true
 
-  # ---------------- Lectura de respaldo (Node.js) ----------------
+
   - type: web
     name: mesa-ayuda-lectura-respaldo-node
     runtime: node
@@ -58,7 +57,7 @@ services:
       - key: MONGODB_URI
         sync: false
 
-  # ---------------- Eliminar (Node.js) ----------------
+  
   - type: web
     name: mesa-ayuda-eliminar-node
     runtime: node
@@ -70,7 +69,7 @@ services:
       - key: MONGODB_URI
         sync: false
 
-  # ---------------- Actualizar (Go) ----------------
+  
   - type: web
     name: mesa-ayuda-actualizar-go
     runtime: docker
@@ -81,7 +80,7 @@ services:
       - key: MONGODB_URI
         sync: false
 
-  # ---------------- Insertar (Java / Spring Boot) ----------------
+ 
   - type: web
     name: mesa-ayuda-insertar-java
     runtime: docker

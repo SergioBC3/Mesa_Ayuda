@@ -1,18 +1,4 @@
-"""Cliente de los microservicios de tickets.
 
-Operaciones de escritura (cada una es un microservicio en un lenguaje distinto):
-    - insertar   -> Java    (POST   /tickets)
-    - actualizar -> Go      (PUT    /tickets/<id>)
-    - eliminar   -> Node.js (DELETE /tickets/<id>)
-
-Operaciones de lectura (RESILIENCIA):
-    - principal -> Python (FastAPI)
-    - respaldo  -> Node.js
-  Si el principal falla (caido, timeout, error 5xx), se llama al respaldo para
-  seguir mostrando la informacion. Ademas hay un "circuit breaker": tras varios
-  fallos seguidos el principal se salta durante unos segundos, para no hacer
-  esperar al usuario en cada peticion.
-"""
 import threading
 import time
 
@@ -89,7 +75,7 @@ def _leer(ruta):
         try:
             r = requests.get(f'{base.rstrip("/")}{ruta}', timeout=timeout)
             if r.status_code == 404:
-                # Respuesta valida del servicio: el recurso no existe. No es un fallo.
+                
                 if es_principal:
                     _registrar_exito()
                 raise TicketNoEncontrado()
@@ -130,7 +116,6 @@ def _escribir(metodo, url, ruta='', **kw):
         return {}
 
 
-# ---------------------------------------------------------------- API publica
 def listar_tickets():
     """Devuelve (lista_de_tickets, nombre_de_la_fuente)."""
     datos, fuente = _leer('/tickets')

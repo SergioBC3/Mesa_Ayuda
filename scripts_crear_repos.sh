@@ -1,12 +1,9 @@
-#!/usr/bin/env bash
-# OPCIONAL: publica cada microservicio como un repositorio de GitHub independiente
-# (ademas del repo principal). Requiere: git y gh (GitHub CLI) con sesion iniciada (gh auth login).
-# Uso:  bash scripts_crear_repos.sh TU_USUARIO_GITHUB
+
 set -euo pipefail
 USUARIO="${1:?Uso: bash scripts_crear_repos.sh TU_USUARIO_GITHUB}"
 RAIZ="$(cd "$(dirname "$0")" && pwd)"
 
-publicar() {            # publicar <carpeta> <nombre-del-repo>
+publicar() {            
   local carpeta="$1" repo="$2" tmp
   tmp="$(mktemp -d)"
   cp -r "$RAIZ/$carpeta/." "$tmp/"
