@@ -1,25 +1,52 @@
 import requests
 from django.conf import settings
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Ticket
+from django.contrib import messages
+from django.http import Http404
+from django.shortcuts import render, redirect
+
+from tecnicos.models import Tecnico
+from . import servicios
 from .forms import TicketForm
+from .servicios import (DatosInvalidos, ServicioNoDisponible, TicketNoEncontrado)
+
+MSG_SIN_SERVICIO = ('No se pudo contactar a los microservicios. '
+                    'Si es el primer acceso en un rato, espera ~1 minuto y recarga (arranque en frío).')
+
+
+def _tecnico_por_nombre(nombre):
+    return Tecnico.objects.filter(nombre=nombre).first() if nombre else None
 
 
 def lista_tickets(request):
-    tickets = Ticket.objects.all()
-    contexto = {'tickets': tickets}
+    tickets, origen, error = [], None, None
+    try:
+        tickets, origen = servicios.listar_tickets()
+    except ServicioNoDisponible:
+        error = MSG_SIN_SERVICIO
+    contexto = {'tickets': tickets, 'origen': origen, 'error': error}
     return render(request, 'tickets/lista_tickets.html', contexto)
 
 
 def detalle_ticket(request, ticket_id):
-    ticket = get_object_or_404(Ticket, pk=ticket_id)
-    contexto = {'ticket': ticket}
+    try:
+        ticket, origen = servicios.obtener_ticket(ticket_id)
+    except TicketNoEncontrado:
+        raise Http404('Ticket no encontrado')
+    except ServicioNoDisponible:
+        return render(request, 'tickets/detalle_ticket.html', {'error': MSG_SIN_SERVICIO})
+    contexto = {'ticket': ticket, 'origen': origen,
+                'tecnico': _tecnico_por_nombre(ticket.get('tecnico'))}
     return render(request, 'tickets/detalle_ticket.html', contexto)
 
 
 def tickets_por_estado(request, estado):
-    tickets = Ticket.objects.filter(estado=estado)
-    contexto = {'tickets': tickets, 'estado': estado}
+    tickets, origen, error = [], None, None
+    try:
+        todos, origen = servicios.listar_tickets()
+        tickets = [t for t in todos if t['estado'] == estado]
+    except ServicioNoDisponible:
+        error = MSG_SIN_SERVICIO
+    contexto = {'tickets': tickets, 'estado': estado, 'origen': origen, 'error': error}
     return render(request, 'tickets/tickets_por_estado.html', contexto)
 
 
@@ -27,8 +54,14 @@ def crear_ticket(request):
     if request.method == 'POST':
         form = TicketForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('tickets:lista_tickets')
+            try:
+                servicios.crear_ticket(form.a_payload())
+                messages.success(request, 'Ticket creado (microservicio Java).')
+                return redirect('tickets:lista_tickets')
+            except DatosInvalidos as e:
+                form.add_error(None, str(e))
+            except ServicioNoDisponible:
+                form.add_error(None, MSG_SIN_SERVICIO)
     else:
         form = TicketForm()
     return render(request, 'tickets/formulario_ticket.html',
@@ -36,22 +69,55 @@ def crear_ticket(request):
 
 
 def editar_ticket(request, ticket_id):
-    ticket = get_object_or_404(Ticket, pk=ticket_id)
+    try:
+        ticket, _ = servicios.obtener_ticket(ticket_id)
+    except TicketNoEncontrado:
+        raise Http404('Ticket no encontrado')
+    except ServicioNoDisponible:
+        messages.error(request, MSG_SIN_SERVICIO)
+        return redirect('tickets:lista_tickets')
+
     if request.method == 'POST':
-        form = TicketForm(request.POST, instance=ticket)
+        form = TicketForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('tickets:detalle_ticket', ticket_id=ticket.id)
+            try:
+                servicios.actualizar_ticket(ticket_id, form.a_payload())
+                messages.success(request, 'Ticket actualizado (microservicio Go).')
+                return redirect('tickets:detalle_ticket', ticket_id=ticket_id)
+            except TicketNoEncontrado:
+                raise Http404('Ticket no encontrado')
+            except DatosInvalidos as e:
+                form.add_error(None, str(e))
+            except ServicioNoDisponible:
+                form.add_error(None, MSG_SIN_SERVICIO)
     else:
-        form = TicketForm(instance=ticket)
+        form = TicketForm(initial={
+            'titulo': ticket['titulo'],
+            'descripcion': ticket['descripcion'],
+            'estado': ticket['estado'],
+            'tecnico': _tecnico_por_nombre(ticket.get('tecnico')),
+        })
     return render(request, 'tickets/formulario_ticket.html',
                   {'form': form, 'titulo_pagina': 'Editar ticket'})
 
 
 def eliminar_ticket(request, ticket_id):
-    ticket = get_object_or_404(Ticket, pk=ticket_id)
+    try:
+        ticket, _ = servicios.obtener_ticket(ticket_id)
+    except TicketNoEncontrado:
+        raise Http404('Ticket no encontrado')
+    except ServicioNoDisponible:
+        messages.error(request, MSG_SIN_SERVICIO)
+        return redirect('tickets:lista_tickets')
+
     if request.method == 'POST':
-        ticket.delete()
+        try:
+            servicios.eliminar_ticket(ticket_id)
+            messages.success(request, 'Ticket eliminado (microservicio Node.js).')
+        except TicketNoEncontrado:
+            messages.error(request, 'El ticket ya no existe.')
+        except ServicioNoDisponible:
+            messages.error(request, MSG_SIN_SERVICIO)
         return redirect('tickets:lista_tickets')
     return render(request, 'tickets/confirmar_eliminar.html', {'ticket': ticket})
 
@@ -82,13 +148,16 @@ def asistente_ia(request):
         elif not settings.GROQ_API_KEY:
             error = 'Falta configurar GROQ_API_KEY en el servidor.'
         else:
-            tickets = Ticket.objects.all().select_related('tecnico')
+            try:
+                tickets, _ = servicios.listar_tickets()
+            except ServicioNoDisponible:
+                tickets = []
             lineas = []
             for t in tickets:
-                tecnico_nombre = t.tecnico.nombre if t.tecnico else 'Sin asignar'
+                tecnico_nombre = t.get('tecnico') or 'Sin asignar'
                 lineas.append(
-                    f'- Ticket #{t.id}: "{t.titulo}" | Estado: {t.get_estado_display()} '
-                    f'| Técnico: {tecnico_nombre} | Descripción: {t.descripcion}'
+                    f'- Ticket #{t["id"]}: "{t["titulo"]}" | Estado: {t["estado_display"]} '
+                    f'| Técnico: {tecnico_nombre} | Descripción: {t["descripcion"]}'
                 )
             contexto_bd = '\n'.join(lineas) if lineas else 'No hay tickets registrados.'
 

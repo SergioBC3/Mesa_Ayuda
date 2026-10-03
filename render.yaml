@@ -1,0 +1,93 @@
+# Blueprint de Render: despliega TODO el proyecto desde un solo repositorio.
+# Render > New > Blueprint > elegir el repo. Pide los valores marcados sync:false.
+services:
+  # ---------------- Aplicacion Django ----------------
+  - type: web
+    name: mesa-ayuda-web
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn config.wsgi --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: URL_LECTURA_PRINCIPAL      # Python
+        sync: false
+      - key: URL_LECTURA_RESPALDO       # Node.js
+        sync: false
+      - key: URL_INSERTAR               # Java
+        sync: false
+      - key: URL_ACTUALIZAR             # Go
+        sync: false
+      - key: URL_ELIMINAR               # Node.js
+        sync: false
+      - key: MICROSERVICIO_URL          # FAQs (mismo servicio Python)
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+
+  # ---------------- Lectura principal (Python / FastAPI) ----------------
+  - type: web
+    name: mesa-ayuda-lectura-python
+    runtime: python
+    plan: free
+    rootDir: microservicio
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: MONGODB_URI
+        sync: false
+      - key: ADMIN_TOKEN
+        generateValue: true
+
+  # ---------------- Lectura de respaldo (Node.js) ----------------
+  - type: web
+    name: mesa-ayuda-lectura-respaldo-node
+    runtime: node
+    plan: free
+    rootDir: microservicios/ms_lectura_respaldo_node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+
+  # ---------------- Eliminar (Node.js) ----------------
+  - type: web
+    name: mesa-ayuda-eliminar-node
+    runtime: node
+    plan: free
+    rootDir: microservicios/ms_eliminar_node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+
+  # ---------------- Actualizar (Go) ----------------
+  - type: web
+    name: mesa-ayuda-actualizar-go
+    runtime: docker
+    plan: free
+    rootDir: microservicios/ms_actualizar_go
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+
+  # ---------------- Insertar (Java / Spring Boot) ----------------
+  - type: web
+    name: mesa-ayuda-insertar-java
+    runtime: docker
+    plan: free
+    rootDir: microservicios/ms_insertar_java
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: MONGODB_URI
+        sync: false

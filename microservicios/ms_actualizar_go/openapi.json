@@ -1,0 +1,68 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Microservicio de Actualización (Go) - Mesa de Ayuda",
+    "version": "1.0.0",
+    "description": "Actualiza tickets en la base de datos MongoDB."
+  },
+  "paths": {
+    "/health": {
+      "get": { "tags": ["Estado"], "summary": "Estado del servicio", "responses": { "200": { "description": "OK" } } }
+    },
+    "/tickets/{id}": {
+      "put": {
+        "tags": ["Tickets"],
+        "summary": "Actualizar un ticket por id",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "example": 1 }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TicketEntrada" },
+              "example": {
+                "titulo": "Impresora sin conexión",
+                "descripcion": "Ya se cambió el cable de red",
+                "estado": "cerrado",
+                "tecnico": "Carlos Pérez"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket actualizado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ticket" } } }
+          },
+          "400": { "description": "Datos inválidos" },
+          "404": { "description": "Ticket no encontrado" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TicketEntrada": {
+        "type": "object",
+        "required": ["titulo", "descripcion"],
+        "properties": {
+          "titulo": { "type": "string" },
+          "descripcion": { "type": "string" },
+          "estado": { "type": "string", "enum": ["abierto", "cerrado"], "default": "abierto" },
+          "tecnico": { "type": "string", "nullable": true }
+        }
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "titulo": { "type": "string" },
+          "descripcion": { "type": "string" },
+          "estado": { "type": "string" },
+          "tecnico": { "type": "string", "nullable": true }
+        }
+      }
+    }
+  }
+}

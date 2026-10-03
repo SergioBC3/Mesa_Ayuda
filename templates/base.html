@@ -15,6 +15,10 @@
                        border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
         button:hover, .btn:hover { background: #1e3f73; }
         .error { color: #c0392b; }
+        .msg { padding: 0.5rem 1rem; border-radius: 4px; background: #e8f4ea; margin: 0.5rem 0; }
+        .msg.error { background: #fdecea; }
+        .origen { color: #2e7d32; }
+        .origen.respaldo { color: #e65100; }
     </style>
 </head>
 <body>
@@ -25,6 +29,7 @@
         <a href="{% url 'tickets:asistente_ia' %}">Asistente de IA</a>
     </nav>
     <hr>
+    {% if messages %}{% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}{% endif %}
     {% block contenido %}{% endblock %}
 </body>
 </html>

@@ -8,11 +8,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = 'clave-de-desarrollo-no-usar-en-produccion'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'clave-de-desarrollo-no-usar-en-produccion')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.onrender.com').split(',') if o]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,6 +29,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -68,9 +71,31 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
 
 
+# --- Microservicios -----------------------------------------------------------
+# Lectura (RESILIENCIA): principal en Python; si falla, respaldo en Node.js
 MICROSERVICIO_URL = os.environ.get('MICROSERVICIO_URL', 'https://mesa-ayuda-nnue.onrender.com')
+URL_LECTURA_PRINCIPAL = os.environ.get('URL_LECTURA_PRINCIPAL', MICROSERVICIO_URL)
+URL_LECTURA_RESPALDO = os.environ.get('URL_LECTURA_RESPALDO', '')
+# Escritura: un microservicio por operacion, cada uno en un lenguaje distinto
+URL_INSERTAR = os.environ.get('URL_INSERTAR', '')      # Java
+URL_ACTUALIZAR = os.environ.get('URL_ACTUALIZAR', '')  # Go
+URL_ELIMINAR = os.environ.get('URL_ELIMINAR', '')      # Node.js
+
+# Timeouts (segundos). El principal es corto para pasar rapido al respaldo;
+# el respaldo es largo porque en Render gratis puede tardar ~50 s en despertar.
+TIMEOUT_PRINCIPAL = float(os.environ.get('TIMEOUT_PRINCIPAL', '8'))
+TIMEOUT_RESPALDO = float(os.environ.get('TIMEOUT_RESPALDO', '60'))
+TIMEOUT_ESCRITURA = float(os.environ.get('TIMEOUT_ESCRITURA', '60'))
+# Circuit breaker: tras N fallos seguidos del principal, se salta N segundos
+CB_UMBRAL_FALLOS = int(os.environ.get('CB_UMBRAL_FALLOS', '2'))
+CB_SEGUNDOS_ABIERTO = float(os.environ.get('CB_SEGUNDOS_ABIERTO', '30'))
 
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 

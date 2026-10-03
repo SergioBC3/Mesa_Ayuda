@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Tecnico
 from .forms import TecnicoForm
+from tickets import servicios
 
 
 def lista_tecnicos(request):
@@ -11,8 +12,13 @@ def lista_tecnicos(request):
 
 def detalle_tecnico(request, tecnico_id):
     tecnico = get_object_or_404(Tecnico, pk=tecnico_id)
-    tickets = tecnico.tickets.all()
-    contexto = {'tecnico': tecnico, 'tickets': tickets}
+    tickets, error = [], None
+    try:
+        todos, _ = servicios.listar_tickets()
+        tickets = [t for t in todos if t.get('tecnico') == tecnico.nombre]
+    except servicios.ServicioNoDisponible:
+        error = 'No se pudieron consultar los tickets en este momento.'
+    contexto = {'tecnico': tecnico, 'tickets': tickets, 'error': error}
     return render(request, 'tecnicos/detalle_tecnico.html', contexto)
 
 

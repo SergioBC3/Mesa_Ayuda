@@ -1,4 +1,1 @@
-from django.contrib import admin
-from .models import Ticket
-
-admin.site.register(Ticket)
+# Los tickets se administran mediante los microservicios, no con el admin de Django.

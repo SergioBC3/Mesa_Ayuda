@@ -13,6 +13,9 @@
     <a href="{% url 'tickets:tickets_por_estado' 'cerrado' %}">Cerrados</a>
 </p>
 
+{% if error %}<p class="error"><strong>{{ error }}</strong></p>{% endif %}
+{% if origen %}<p><small class="origen {% if 'respaldo' in origen %}respaldo{% endif %}">Datos servidos por el microservicio de lectura: <strong>{{ origen }}</strong></small></p>{% endif %}
+
 {% if tickets %}
 <table>
     <tr>
@@ -24,8 +27,8 @@
     {% for ticket in tickets %}
     <tr>
         <td><a href="{% url 'tickets:detalle_ticket' ticket.id %}">{{ ticket.titulo }}</a></td>
-        <td>{{ ticket.get_estado_display }}</td>
-        <td>{{ ticket.tecnico.nombre|default:"Sin asignar" }}</td>
+        <td>{{ ticket.estado_display }}</td>
+        <td>{{ ticket.tecnico|default:"Sin asignar" }}</td>
         <td>
             <a href="{% url 'tickets:editar_ticket' ticket.id %}">Editar</a>
             <a href="{% url 'tickets:eliminar_ticket' ticket.id %}">Eliminar</a>
@@ -33,7 +36,7 @@
     </tr>
     {% endfor %}
 </table>
-{% else %}
+{% elif not error %}
 <p>No hay tickets registrados.</p>
 {% endif %}
 {% endblock %}

@@ -6,9 +6,10 @@
 <a href="{% url 'tecnicos:eliminar_tecnico' tecnico.id %}">Eliminar</a>
 
 <h2>Tickets asignados</h2>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
 <ul>
     {% for ticket in tickets %}
-    <li><a href="{% url 'tickets:detalle_ticket' ticket.id %}">{{ ticket.titulo }}</a> — {{ ticket.estado }}</li>
+    <li><a href="{% url 'tickets:detalle_ticket' ticket.id %}">{{ ticket.titulo }}</a> — {{ ticket.estado_display }}</li>
     {% empty %}
     <li>No tiene tickets asignados.</li>
     {% endfor %}
